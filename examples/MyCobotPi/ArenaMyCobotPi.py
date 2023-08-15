@@ -106,76 +106,65 @@ def rotateMyCobot(angles):
     myCobot.send_angles(angles, 50)
     print("::send_angles() ==> angles {}, speed 100\n".format(angles))
 
-randomColorButton = Box(object_id="randomColorButton")
+
 def setMyCobotColor(r,g,b):
     #update arena virtual robot
-    randomColorButton.update_attributes(color=(r,g,b,))
-    scene.update_object(randomColorButton)
+    # randomColorButton.update_attributes(color=(r,g,b,))
+    # scene.update_object(randomColorButton)
     #update real robot
     myCobot.set_color(r,g,b)
     print("::set_color() ==> color {}\n".format("255 255 0"))
     
-def randomColorButton_handler(scene, evt, msg):
-    if evt.type == "mousedown":
-        print("Random Color Button pressed!")
-        r = random.randrange(0, 255)
-        g = random.randrange(0, 255)
-        b = random.randrange(0, 255)
-        setMyCobotColor(r,g,b)
+def randomColorButton_handler():
+    print("Random Color Button pressed!")
+    r = random.randrange(0, 255)
+    g = random.randrange(0, 255)
+    b = random.randrange(0, 255)
+    setMyCobotColor(r,g,b)
 
-def randomAngleButton_handler(scene, evt, msg):
-    if evt.type == "mousedown":
-        print("Random Angle Button pressed!")
-        maxAngle = 80
-        j1 = random.uniform(-maxAngle,maxAngle)
-        j2 = random.uniform(-maxAngle,maxAngle)
-        j3 = random.uniform(-maxAngle,maxAngle)
-        j4 = random.uniform(-maxAngle,maxAngle)
-        j5 = random.uniform(-maxAngle,maxAngle)
-        j6 = random.uniform(-maxAngle,maxAngle)
-        rotateMyCobot([j1,j2,j3,j4,j5,j6])
+def randomAngleButton_handler():
+    print("Random Angle Button pressed!")
+    maxAngle = 80
+    j1 = random.uniform(-maxAngle,maxAngle)
+    j2 = random.uniform(-maxAngle,maxAngle)
+    j3 = random.uniform(-maxAngle,maxAngle)
+    j4 = random.uniform(-maxAngle,maxAngle)
+    j5 = random.uniform(-maxAngle,maxAngle)
+    j6 = random.uniform(-maxAngle,maxAngle)
+    rotateMyCobot([j1,j2,j3,j4,j5,j6])
 
-def resetAngleButton_handler(scene, evt, msg):
-    if evt.type == "mousedown":
-        print("Reset Button pressed!")
-        rotateMyCobot([0,0,0,0,0,0])
+def resetAngleButton_handler():
+    print("Reset Button pressed!")
+    rotateMyCobot([0,0,0,0,0,0])
 
 
-#------MAKE BUTTONS ------#
-def makeButtonText(button, buttonID, buttonText, buttonColor = (255,255,255), buttonPos = (0, 0, 0.5), buttonRot = (0,0,0), buttonScale = (0.5, 2, 1)):
-    return Text(
-        object_id=buttonID+"_text",
-        text=buttonText,
-        align="center",
-            
-        position=buttonPos,
-        rotation=buttonRot,
-        scale=buttonScale,
+#------MAKE BUTTON PANEL ------#
 
-        color=buttonColor,
+def button_dispatcher(_scene, evt, _msg):
+    if evt.type == "buttonClick":
+        button_name = evt.data.button_name
+        if button_name == "Goto random angle":
+            randomAngleButton_handler()
+        elif button_name == "Reset angle":
+            resetAngleButton_handler()
+        elif button_name == "Set random color":
+            randomColorButton_handler()
 
-        parent = button,
-        persist=True,
-    )
 
-def makeButton(buttonID, buttonText, buttonHandler, buttonColor = (128,128,128), buttonPos = (0,0,0), buttonRot = (0,0,0), buttonScale = (0.4, 0.08, 0.04), buttonTextColor = (255,255,255)):
-    button = Box(
-        object_id=buttonID,
+button_panel = Object(**{
+    "object_id": "cobot_button_panel",
+    "arenaui-button-panel": {
+        "title": "Cobot Control",
+        "buttons": ["Goto random angle", "Reset angle", "Set random color"],
+        "vertical": True,
+    },
+    "position": Position(0, 0.5, 0),
+    "scale": Scale(0.5, 0.5, 0.5),
+    "evt_handler": button_dispatcher,
 
-        position=buttonPos,
-        rotation=buttonRot,
-        scale=buttonScale,
+})
+scene.add_object(button_panel)
 
-        color=buttonColor,
-
-        clickable=True,
-        persist=True,
-        evt_handler=buttonHandler,
-    )
-    buttonText = makeButtonText(button, buttonID, buttonText, buttonColor=buttonTextColor)
-    scene.add_object(button)
-    scene.add_object(buttonText)
-    return button
 
 #------ PROGRAM INIT/UPDATE ------#
 
@@ -189,9 +178,5 @@ def programStart():
     scene.add_object(MyCobotPi_J4)
     scene.add_object(MyCobotPi_J5)
     scene.add_object(MyCobotPi_J6)
-    # Add buttons
-    makeButton("randomAngleButton", "Goto random angle!", randomAngleButton_handler, buttonColor=(11, 55, 255), buttonPos=(0, 0.55, 0))
-    makeButton("resetAngleButton", "Reset angle!", resetAngleButton_handler, buttonColor=(255, 55, 11), buttonPos=(0, 0.65, 0))
-    makeButton("randomColorButton", "Set random color!", randomColorButton_handler, buttonColor=(0, 255, 0), buttonPos=(0, 0.75, 0),buttonTextColor=(0,0,0))
-    
+
 scene.run_tasks()
